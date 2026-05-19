@@ -3,7 +3,7 @@ layout: default
 title: "NPDES SWPP Report - May 19, 2026"
 ---
 
-# NPDES Construction General Permit — Territory Report
+# NPDES Stormwater Construction Permit Report
 
 **Generated:** Tuesday, May 19, 2026  
 **Total Permits:** 92  
