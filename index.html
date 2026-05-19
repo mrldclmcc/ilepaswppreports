@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" data-color-mode="auto" data-light-theme="light" data-dark-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Index of IL EPA SWPP Construction Reports</title>
+  <link rel="stylesheet" href="https://unpkg.com/@primer/css@21.3.1/dist/primer.css">
+  <style>
+    :root {
+      --page-max-width: 48rem;
+    }
+    body {
+      padding: 2rem 1.5rem;
+      max-width: var(--page-max-width);
+      margin: 0 auto;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid var(--borderColor-default);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      color: var(--fgColor-default);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      transition: background-color 0.15s ease;
+    }
+    .theme-toggle:hover {
+      background-color: var(--bgColor-muted);
+    }
+    .report-card {
+      display: block;
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid var(--borderColor-default);
+      border-radius: 6px;
+      text-decoration: none;
+      color: inherit;
+      transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .report-card:hover {
+      background-color: var(--bgColor-muted);
+      border-color: var(--borderColor-accent-emphasis);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .report-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .report-meta {
+      color: var(--fgColor-muted);
+      font-size: 0.875rem;
+    }
+    footer {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--borderColor-default);
+      font-size: 0.8rem;
+      color: var(--fgColor-muted);
+    }
+    @media (max-width: 600px) {
+      body { padding: 1.5rem 1rem; }
+      .theme-toggle { top: 0.75rem; right: 0.75rem; padding: 0.4rem 0.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+
+  <header class="mb-4">
+    <h1 class="h1 mb-2">Index of IL EPA SWPP Construction Reports</h1>
+    <p class="color-fg-muted">Select a report below to view the full document.</p>
+  </header>
+
+  <main>
+    <a href="npdes-swpp-report-2026-05-19.md" class="report-card">
+      <div class="report-title">NPDES SWPP Report</div>
+      <div class="report-meta">Stormwater Pollution Prevention Plan • May 19, 2026</div>
+    </a>
+
+    <a href="npdes-territory-report-2026-05-19.md" class="report-card">
+      <div class="report-title">NPDES Territory Report</div>
+      <div class="report-meta">Territory Compliance & Inspection Summary • May 19, 2026</div>
+    </a>
+  </main>
+
+  <footer>
+    <p>Hosted on GitHub Pages • Generated for IL EPA Compliance</p>
+  </footer>
+
+  <script>
+    (function() {
+      const html = document.documentElement;
+      const toggle = document.getElementById('themeToggle');
+      const STORAGE_KEY = 'il-epa-theme';
+
+      function applyTheme(mode) {
+        html.setAttribute('data-color-mode', mode);
+        toggle.textContent = mode === 'dark' ? '☀️' : '🌙';
+        toggle.setAttribute('aria-label', mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        try { localStorage.setItem(STORAGE_KEY, mode); } catch(e) {}
+      }
+
+      // Initialize theme
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(saved || (systemDark ? 'dark' : 'light'));
+
+      // Toggle handler
+      toggle.addEventListener('click', () => {
+        const current = html.getAttribute('data-color-mode');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    })();
+  </script>
+</body>
+</html>
