@@ -15,13 +15,13 @@ title: "NPDES SWPP Report - May 19, 2026"
 
 | Territory | # of Permits | Total Acres Disturbed |
 |-----------|-------------:|----------------------:|
-| Local 1 | 17 | 254 |
-| Local 5 | 7 | 74.11 |
-| Local 68 | 16 | 75.95 |
-| Local 75 | 18 | 490.96 |
-| Local 152 | 10 | 193.48 |
-| Local 582 | 16 | 452.34 |
-| Local 1035 | 8 | 124.78 |
+| [Local 1](#local-1) | 17 | 254 |
+| [Local 5](#local-5) | 7 | 74.11 |
+| [Local 68](#local-68) | 16 | 75.95 |
+| [Local 75](#local-75) | 18 | 490.96 |
+| [Local 152](#local-152) | 10 | 193.48 |
+| [Local 582](#local-582) | 16 | 452.34 |
+| [Local 1035](#local-1035) | 8 | 124.78 |
 | **Total** | **92** | **1,665.62** |
 
 ---
