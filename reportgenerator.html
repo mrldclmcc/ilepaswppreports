@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPDES Permit Report Generator v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --blue: #1a56db;
+    --blue-light: #e8f0fe;
+    --blue-mid: #3b73d1;
+    --orange: #e8610a;
+    --orange-light: #fff3eb;
+    --bg: #f7f8fc;
+    --surface: #ffffff;
+    --border: #dde3ed;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --radius: 8px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+  }
+
+  [data-dark] {
+    --blue: #5b8ef0;
+    --blue-light: #1e2d52;
+    --blue-mid: #7aaaf7;
+    --orange: #f5823a;
+    --orange-light: #2d1d0f;
+    --bg: #111827;
+    --surface: #1f2937;
+    --border: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #6b7280;
+    --shadow: 0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--blue);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .logo-mark svg { width: 16px; height: 16px; fill: white; }
+
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+
+  .btn-icon {
+    background: none; border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 36px; height: 36px;
+    cursor: pointer; color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { background: var(--bg); color: var(--text-primary); }
+
+  /* ── MAIN LAYOUT ── */
+  main { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-section { margin-bottom: 32px; }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--blue);
+    background: var(--blue-light);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .upload-icon {
+    width: 48px; height: 48px; margin: 0 auto 16px;
+    background: var(--blue-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .upload-icon svg { width: 24px; height: 24px; stroke: var(--blue); fill: none; stroke-width: 2; }
+
+  .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .upload-sub { font-size: 13px; color: var(--text-muted); }
+
+  .file-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue-light); color: var(--blue);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; font-weight: 500;
+    margin-top: 12px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: none; border-radius: var(--radius);
+    padding: 10px 18px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; font-family: var(--sans);
+    text-decoration: none;
+  }
+
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: var(--blue-mid); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: var(--surface); color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--bg); }
+
+  .btn-orange { background: var(--orange); color: white; }
+  .btn-orange:hover { opacity: 0.9; }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text-secondary);
+    display: none;
+  }
+
+  .status-bar.visible { display: flex; }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--orange); flex-shrink: 0;
+  }
+
+  .status-dot.success { background: #16a34a; }
+  .status-dot.error { background: #dc2626; }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+  }
+
+  .stat-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 600; color: var(--blue); font-family: var(--mono); }
+
+  /* ── OUTPUT AREA ── */
+  .output-section { display: none; }
+  .output-section.visible { display: block; }
+
+  .output-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+  }
+
+  .output-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+
+  .output-actions { display: flex; gap: 8px; }
+
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  #report-output {
+    width: 100%;
+    min-height: 480px;
+    max-height: 70vh;
+    padding: 20px 24px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    resize: vertical;
+    outline: none;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: block;
+  }
+
+  /* ── COPY TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #111827; color: white;
+    padding: 10px 18px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500;
+    opacity: 0; transform: translateY(8px);
+    transition: all 0.2s; pointer-events: none;
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── GENERATE SECTION ── */
+  .generate-section {
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  
+  .filter-controls {
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px; margin-bottom: 24px;
+  }
+  
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-group label { font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+  .filter-group input[type="checkbox"] { accent-color: var(--blue); }
+  .filter-group input[type="date"] {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 6px 10px; border-radius: 4px;
+    font-family: var(--sans); font-size: 13px;
+  }
+  .filter-separator { width: 1px; height: 24px; background: var(--border); }
+
+  /* ── EMPTY STATE ── */
+  .empty-hero {
+    text-align: center; padding: 60px 24px;
+    color: var(--text-muted);
+  }
+
+  .empty-hero h2 { font-size: 20px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+  .empty-hero p { font-size: 14px; line-height: 1.6; }
+
+  .wordmark {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    color: var(--text-muted); letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    main { padding: 24px 16px 60px; }
+    header { padding: 0 16px; }
+    .upload-zone { padding: 32px 16px; }
+    .output-toolbar { flex-direction: column; align-items: flex-start; }
+    .generate-section, .filter-controls { flex-direction: column; align-items: flex-start; }
+    .filter-group { width: 100%; justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M2 3h12v2H2zM2 7h8v2H2zM2 11h10v2H2z"/></svg>
+    </div>
+    NPDES Report Generator <span style="font-size:0.55em; color:var(--text-muted)">v2</span>
+  </div>
+  <div class="header-actions">
+    <span class="wordmark">CGP / Illinois</span>
+    <button class="btn-icon" id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- Upload -->
+  <section class="upload-section">
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" accept=".json" id="file-input">
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <div class="upload-title">Drop your JSON file here</div>
+      <div class="upload-sub">or click to browse — accepts .json permit exports</div>
+      <div id="file-name-badge" style="display:none" class="file-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="file-name-text"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Status -->
+  <div class="status-bar" id="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text"></span>
+  </div>
+
+  <!-- Stats strip (hidden until loaded) -->
+  <div class="stats-strip" id="stats-strip" style="display:none">
+    <div class="stat-card">
+      <div class="stat-label">Total Permits</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Locals Represented</div>
+      <div class="stat-value" id="stat-locals">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Acres Disturbed</div>
+      <div class="stat-value" id="stat-acres">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Unassigned</div>
+      <div class="stat-value" id="stat-unassigned">—</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-controls" id="filter-controls" style="display:none">
+    <div class="filter-group">
+      <input type="checkbox" id="include-docs" checked>
+      <label for="include-docs">Include "Attached Documents"</label>
+    </div>
+    <div class="filter-separator"></div>
+    <div class="filter-group">
+      <input type="checkbox" id="include-tbd" checked>
+      <label for="include-tbd">Include TBD / To Be Determined Operators</label>
+    </div>
+    <div class="filter-separator"></div>
+    <div class="filter-group">
+      <label for="start-date">Start:</label>
+      <input type="date" id="start-date">
+      <label for="end-date" style="margin-left:8px">End:</label>
+      <input type="date" id="end-date">
+      <button class="btn-secondary" id="clear-dates" style="margin-left:8px; padding:6px 10px; font-size:12px">Clear</button>
+    </div>
+  </div>
+
+  <!-- Generate button -->
+  <div class="generate-section" id="generate-section" style="display:none">
+    <button class="btn btn-primary" id="generate-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Generate Report
+    </button>
+    <button class="btn btn-secondary" id="clear-btn">Clear</button>
+  </div>
+
+  <!-- Output -->
+  <section class="output-section" id="output-section">
+    <div class="output-toolbar">
+      <span class="output-title">Markdown Report</span>
+      <div class="output-actions">
+        <button class="btn btn-secondary" id="copy-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="btn btn-orange" id="download-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download .md
+        </button>
+      </div>
+    </div>
+    <div class="output-box">
+      <textarea id="report-output" spellcheck="false" readonly></textarea>
+    </div>
+  </section>
+
+  <div class="empty-hero" id="empty-hero">
+    <h2>Ready to process permit data</h2>
+    <p>Upload a JSON export from the CGP system to generate<br>a territory-organized Markdown report.</p>
+  </div>
+</main>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// TERRITORY GEOJSON (PRESERVED EXACTLY FROM V1)
+// ══════════════════════════════════════════════════════════════════
+const TERRITORIES = {
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "name": "Local 6" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -87.6306597, 41.9622029 ], [ -87.6622636, 41.9614958 ], [ -87.6691694, 41.9615475 ], [ -87.6688826, 41.9532671 ], [ -87.6686524, 41.9448828 ], [ -87.6685125, 41.9421112 ], [ -87.6685554, 41.9386319 ], [ -87.6683789, 41.9357215 ], [ -87.6682827, 41.9331257 ], [ -87.6682233, 41.9302426 ], [ -87.6681701, 41.9278389 ], [ -87.668034, 41.9239662 ], [ -87.6685808, 41.9215222 ], [ -87.6682857, 41.9197198 ], [ -87.6679638, 41.9181847 ], [ -87.6677277, 41.9173463 ], [ -87.6677652, 41.9161366 ], [ -87.6675403, 41.9070411 ], [ -87.6672613, 41.8963799 ], [ -87.6669367, 41.8853116 ], [ -87.6865216, 41.8846247 ], [ -87.6860166, 41.8752547 ], [ -87.6929708, 41.8751577 ], [ -87.6990217, 41.8750933 ], [ -87.7040438, 41.8744239 ], [ -87.7077792, 41.8738792 ], [ -87.7334968, 41.8735442 ], [ -87.735868, 41.8728569 ], [ -87.7382498, 41.8717383 ], [ -87.755032, 41.8711582 ], [ -87.7597314, 41.8711228 ], [ -87.7643451, 41.8709274 ], [ -87.7692002, 41.8707775 ], [ -87.7743098, 41.8710621 ], [ -87.7742911, 41.8702199 ], [ -87.774238, 41.86962 ], [ -87.7742124, 41.8686494 ], [ -87.7740966, 41.8655099 ], [ -87.7711271, 41.8655728 ], [ -87.7401439, 41.8659615 ], [ -87.7387823, 41.8329587 ], [ -87.7385769, 41.8221788 ], [ -87.7447616, 41.8220908 ], [ -87.7446586, 41.8163178 ], [ -87.7529757, 41.8133988 ], [ -87.7527327, 41.8002468 ], [ -87.7970397, 41.7995068 ], [ -87.8016246, 41.7980538 ], [ -87.800743, 41.773778 ], [ -87.7575025, 41.7745742 ], [ -87.7419963, 41.7748474 ], [ -87.741203, 41.745616 ], [ -87.7408436, 41.7346088 ], [ -87.6823844, 41.73552 ], [ -87.6820674, 41.7231962 ], [ -87.6817627, 41.7135436 ], [ -87.6916141, 41.7135571 ], [ -87.6915995, 41.7071313 ], [ -87.7012977, 41.7069486 ], [ -87.7013964, 41.7061537 ], [ -87.7110417, 41.7059836 ], [ -87.7112137, 41.7112676 ], [ -87.7125556, 41.7112476 ], [ -87.7126166, 41.7131596 ], [ -87.7210366, 41.7130366 ], [ -87.720426, 41.691267 ], [ -87.739718, 41.6908927 ], [ -87.7393646, 41.6835016 ], [ -87.7296546, 41.6836696 ], [ -87.7251415, 41.6837306 ], [ -87.7212574, 41.6837631 ], [ -87.7114197, 41.6839646 ], [ -87.7114345, 41.6820699 ], [ -87.7112497, 41.6820486 ], [ -87.7112347, 41.6816656 ], [ -87.7115087, 41.6816606 ], [ -87.7114917, 41.6812246 ], [ -87.7113077, 41.6812276 ], [ -87.7113134, 41.6804711 ], [ -87.7053212, 41.6805821 ], [ -87.705318, 41.6841994 ], [ -87.7005511, 41.6843231 ], [ -87.7005092, 41.686137 ], [ -87.6993515, 41.6861721 ], [ -87.6993786, 41.6877956 ], [ -87.6957318, 41.6877697 ], [ -87.6956469, 41.6842122 ], [ -87.6858757, 41.6843386 ], [ -87.6856094, 41.6803541 ], [ -87.6858383, 41.6785409 ], [ -87.6863608, 41.6771896 ], [ -87.6807178, 41.6772563 ], [ -87.6789305, 41.6772078 ], [ -87.6751843, 41.6772708 ], [ -87.6686592, 41.6773864 ], [ -87.6678098, 41.6774298 ], [ -87.6683267, 41.6760056 ], [ -87.6672457, 41.6757816 ], [ -87.6666442, 41.6774428 ], [ -87.6613698, 41.6775288 ], [ -87.6610047, 41.6702839 ], [ -87.6517571, 41.6703005 ], [ -87.6417966, 41.670498 ], [ -87.6416719, 41.6668221 ], [ -87.6415205, 41.6632789 ], [ -87.6471747, 41.663242 ], [ -87.6470519, 41.6617542 ], [ -87.6469018, 41.6575106 ], [ -87.6471838, 41.6574886 ], [ -87.6471788, 41.6568936 ], [ -87.6491718, 41.6564206 ], [ -87.6490717, 41.6558236 ], [ -87.6480958, 41.6560606 ], [ -87.6477088, 41.6563046 ], [ -87.6438798, 41.6567374 ], [ -87.6435148, 41.6567634 ], [ -87.6434066, 41.6566246 ], [ -87.6431053, 41.6567022 ], [ -87.6429543, 41.6567334 ], [ -87.6426851, 41.6567292 ], [ -87.6422301, 41.6568193 ], [ -87.6417808, 41.6568006 ], [ -87.6412988, 41.6568366 ], [ -87.6409388, 41.6570136 ], [ -87.6399588, 41.6566166 ], [ -87.6391388, 41.6565516 ], [ -87.6373818, 41.6564126 ], [ -87.6365348, 41.6569686 ], [ -87.6365338, 41.6563106 ], [ -87.6341116, 41.6562479 ], [ -87.6331758, 41.6563686 ], [ -87.6324869, 41.6563315 ], [ -87.6316868, 41.6565466 ], [ -87.6312159, 41.6569548 ], [ -87.6297721, 41.657656 ], [ -87.6284031, 41.6583297 ], [ -87.6278112, 41.6589017 ], [ -87.6264147, 41.6598997 ], [ -87.6246238, 41.6607784 ], [ -87.6242125, 41.6609327 ], [ -87.62344, 41.661139 ], [ -87.621974, 41.661162 ], [ -87.6209082, 41.6609243 ], [ -87.6204571, 41.6605139 ], [ -87.620165, 41.6601364 ], [ -87.6201089, 41.6597268 ], [ -87.6205203, 41.6587497 ], [ -87.6176113, 41.6588137 ], [ -87.6188003, 41.6538017 ], [ -87.6206123, 41.6498957 ], [ -87.6176803, 41.6495567 ], [ -87.6172083, 41.6497287 ], [ -87.617228, 41.644585 ], [ -87.606457, 41.6446113 ], [ -87.6005276, 41.6446032 ], [ -87.5991551, 41.644601 ], [ -87.597829, 41.644619 ], [ -87.5978293, 41.6481496 ], [ -87.5953316, 41.6486886 ], [ -87.5940764, 41.6489412 ], [ -87.592714, 41.6489854 ], [ -87.5914485, 41.6488206 ], [ -87.590505, 41.6483831 ], [ -87.5900449, 41.6481154 ], [ -87.5883832, 41.6464687 ], [ -87.5867586, 41.6447868 ], [ -87.5865717, 41.6444037 ], [ -87.5803832, 41.6442314 ], [ -87.5246479, 41.6440334 ], [ -87.5248994, 41.6741117 ], [ -87.5245274, 41.7028276 ], [ -87.5364573, 41.7140971 ], [ -87.5401772, 41.7157408 ], [ -87.5424813, 41.7173445 ], [ -87.5472292, 41.7209518 ], [ -87.5512048, 41.7248869 ], [ -87.5567482, 41.7287813 ], [ -87.5623672, 41.7328122 ], [ -87.5641146, 41.7340229 ], [ -87.5664845, 41.735738 ], [ -87.5687144, 41.7373906 ], [ -87.5772747, 41.7435263 ], [ -87.5993352, 41.7594197 ], [ -87.6101981, 41.7672445 ], [ -87.6167029, 41.7719165 ], [ -87.619484, 41.7739925 ], [ -87.6204341, 41.7745176 ], [ -87.6216845, 41.7749706 ], [ -87.6240567, 41.7749245 ], [ -87.6260392, 41.7749835 ], [ -87.6270564, 41.7752025 ], [ -87.6282211, 41.7756736 ], [ -87.6298159, 41.7768966 ], [ -87.6310126, 41.7790634 ], [ -87.6316523, 41.8090883 ], [ -87.6651695, 41.8085514 ], [ -87.6659101, 41.8429347 ], [ -87.6658875, 41.8448567 ], [ -87.663433, 41.8447528 ], [ -87.6610978, 41.8457374 ], [ -87.6568682, 41.8483354 ], [ -87.6533687, 41.8479614 ], [ -87.6464941, 41.8491601 ], [ -87.6471745, 41.8743298 ], [ -87.6386033, 41.874445 ], [ -87.6359468, 41.8744658 ], [ -87.6376289, 41.8771747 ], [ -87.6380029, 41.8787784 ], [ -87.6385051, 41.88052 ], [ -87.6384077, 41.8830041 ], [ -87.6378535, 41.8856016 ], [ -87.637986, 41.886346 ], [ -87.6358104, 41.8876746 ], [ -87.6271638, 41.8878499 ], [ -87.6251981, 41.8890073 ], [ -87.5973764, 41.888967 ], [ -87.5992037, 41.8968526 ], [ -87.6100962, 41.8967141 ], [ -87.6124444, 41.8941729 ], [ -87.6143052, 41.8946912 ], [ -87.6190845, 41.9013426 ], [ -87.6223225, 41.9022666 ], [ -87.6240265, 41.9102976 ], [ -87.6193805, 41.9137296 ], [ -87.6246886, 41.9156906 ], [ -87.6306466, 41.9388916 ], [ -87.6405155, 41.9567866 ], [ -87.6306597, 41.9622029 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 1" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -87.8036999, 41.8503999 ], [ -87.7736139, 41.8509386 ], [ -87.7395567, 41.8513373 ], [ -87.7401439, 41.8659615 ], [ -87.7740966, 41.8655099 ], [ -87.7743098, 41.8710621 ], [ -87.7692793, 41.8710389 ], [ -87.7645653, 41.8714761 ], [ -87.7615678, 41.8716575 ], [ -87.7392991, 41.8718262 ], [ -87.7375843, 41.8723205 ], [ -87.7359981, 41.8731183 ], [ -87.7335447, 41.8738254 ], [ -87.707877, 41.874217 ], [ -87.6985923, 41.8755004 ], [ -87.6863751, 41.8756375 ], [ -87.6865216, 41.8846247 ], [ -87.6669367, 41.8853116 ], [ -87.6676352, 41.9063815 ], [ -87.6678832, 41.916131 ], [ -87.6678411, 41.9172709 ], [ -87.6683297, 41.9191421 ], [ -87.6687003, 41.9215083 ], [ -87.6681867, 41.9240041 ], [ -87.668671, 41.936135 ], [ -87.669066, 41.94881 ], [ -87.669231, 41.955969 ], [ -87.669325, 41.958767 ], [ -87.669339, 41.961115 ], [ -87.6693, 41.961684 ], [ -87.630852, 41.962459 ], [ -87.64385, 41.970853 ], [ -87.648905, 41.981194 ], [ -87.652838, 41.990134 ], [ -87.663458, 42.020008 ], [ -87.668688, 42.030546 ], [ -87.671515, 42.046183 ], [ -87.68061, 42.078221 ], [ -87.709211, 42.093636 ], [ -87.727968, 42.11274 ], [ -87.7577543, 42.1521762 ], [ -87.8794606, 42.1528846 ], [ -87.9184709, 42.1530633 ], [ -88.0009982, 42.153719 ], [ -88.1222797, 42.1540437 ], [ -88.238449, 42.154284 ], [ -88.238291, 42.066976 ], [ -88.263645, 42.066892 ], [ -88.2632812, 41.9922312 ], [ -87.9398186, 41.9935409 ], [ -87.9393552, 41.9584657 ], [ -87.9203198, 41.9549932 ], [ -87.9202335, 41.9327429 ], [ -87.919892, 41.908364 ], [ -87.9193221, 41.8477079 ], [ -87.8859678, 41.8485668 ], [ -87.8526127, 41.849484 ], [ -87.8036999, 41.8503999 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 4" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -87.524064, 41.706718 ], [ -87.523859, 41.731461 ], [ -87.527655, 41.734324 ], [ -87.529734, 41.748522 ], [ -87.544023, 41.753607 ], [ -87.539601, 41.757926 ], [ -87.545116, 41.762071 ], [ -87.548732, 41.76043 ], [ -87.561011, 41.765243 ], [ -87.555307, 41.766049 ], [ -87.566426, 41.775177 ], [ -87.57935, 41.794344 ], [ -87.568646, 41.795033 ], [ -87.568241, 41.797641 ], [ -87.578914, 41.798112 ], [ -87.578586, 41.803465 ], [ -87.583751, 41.807283 ], [ -87.596178, 41.824344 ], [ -87.605013, 41.835626 ], [ -87.608701, 41.850744 ], [ -87.603465, 41.853277 ], [ -87.604409, 41.867316 ], [ -87.615395, 41.867906 ], [ -87.61591, 41.88179 ], [ -87.611876, 41.882469 ], [ -87.611275, 41.888516 ], [ -87.625133, 41.8888355 ], [ -87.6274871, 41.8874749 ], [ -87.6341222, 41.8874737 ], [ -87.6357677, 41.887289 ], [ -87.6374908, 41.886109 ], [ -87.638051, 41.882351 ], [ -87.6380481, 41.8799072 ], [ -87.6373799, 41.8774634 ], [ -87.6368625, 41.8760824 ], [ -87.6357765, 41.8744139 ], [ -87.6470296, 41.8742899 ], [ -87.646812, 41.861275 ], [ -87.646408, 41.849104 ], [ -87.653334, 41.8478488 ], [ -87.6567636, 41.8482235 ], [ -87.6607314, 41.8457969 ], [ -87.6634545, 41.8446969 ], [ -87.6658875, 41.8448567 ], [ -87.6657913, 41.842812 ], [ -87.6649222, 41.8086681 ], [ -87.6315866, 41.8091121 ], [ -87.6307915, 41.779299 ], [ -87.6300944, 41.777725 ], [ -87.6293808, 41.7769489 ], [ -87.6286672, 41.776493 ], [ -87.6277343, 41.7758455 ], [ -87.626737, 41.775398 ], [ -87.6259221, 41.7751745 ], [ -87.6250642, 41.775119 ], [ -87.6215571, 41.775032 ], [ -87.6201564, 41.7745825 ], [ -87.6190131, 41.773845 ], [ -87.617166, 41.772491 ], [ -87.6116174, 41.7684769 ], [ -87.6025493, 41.7619209 ], [ -87.5929262, 41.7549479 ], [ -87.5879589, 41.7513739 ], [ -87.5839693, 41.7485029 ], [ -87.5509939, 41.7249807 ], [ -87.5489066, 41.7230188 ], [ -87.5470448, 41.7210008 ], [ -87.5417544, 41.7170296 ], [ -87.5400916, 41.7158604 ], [ -87.5363903, 41.7141631 ], [ -87.5276673, 41.7061294 ], [ -87.5249004, 41.70331 ], [ -87.525077, 41.705825 ], [ -87.524064, 41.706718 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 5" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -87.800743, 41.773778 ], [ -87.8019675, 41.798129 ], [ -87.7970182, 41.7996348 ], [ -87.7527327, 41.8002468 ], [ -87.753098, 41.813302 ], [ -87.7446586, 41.8163178 ], [ -87.7447616, 41.8220908 ], [ -87.7385769, 41.8221788 ], [ -87.739562, 41.8512653 ], [ -87.7736139, 41.8509386 ], [ -87.8036999, 41.8503999 ], [ -87.8456929, 41.8496059 ], [ -87.8615391, 41.8491563 ], [ -87.8903692, 41.8484048 ], [ -87.9193221, 41.8477079 ], [ -87.914273, 41.717156 ], [ -87.9807472, 41.687784 ], [ -88.0301857, 41.6861174 ], [ -88.027927, 41.648773 ], [ -87.912212, 41.651235 ], [ -87.908987, 41.556884 ], [ -87.8507894, 41.5577066 ], [ -87.8216901, 41.5582042 ], [ -87.7925796, 41.5586062 ], [ -87.7921629, 41.5429105 ], [ -87.7920176, 41.5423182 ], [ -87.7918831, 41.5418946 ], [ -87.7915946, 41.5413902 ], [ -87.7913382, 41.5409661 ], [ -87.7907612, 41.5400336 ], [ -87.7904936, 41.5394443 ], [ -87.790349, 41.5389349 ], [ -87.7902688, 41.5384294 ], [ -87.790254, 41.5043363 ], [ -87.7902858, 41.487101 ], [ -87.7902747, 41.4698717 ], [ -87.7873096, 41.4698597 ], [ -87.7871532, 41.4589633 ], [ -87.7870236, 41.4480549 ], [ -87.7867137, 41.4262883 ], [ -87.7861669, 41.3827268 ], [ -87.7859988, 41.3718365 ], [ -87.7858737, 41.3609562 ], [ -87.785452, 41.3392197 ], [ -87.7852184, 41.3283389 ], [ -87.7851501, 41.3256175 ], [ -87.7850999, 41.322896 ], [ -87.7850157, 41.3174581 ], [ -87.7846666, 41.2958181 ], [ -87.5267316, 41.2982083 ], [ -87.525566, 41.493682 ], [ -87.5253296, 41.5017638 ], [ -87.525521, 41.522898 ], [ -87.525496, 41.535577 ], [ -87.525346, 41.556108 ], [ -87.525282, 41.576604 ], [ -87.5246479, 41.6440334 ], [ -87.5556312, 41.6441345 ], [ -87.5711229, 41.644206 ], [ -87.5788688, 41.644233 ], [ -87.5803832, 41.6442314 ], [ -87.5865717, 41.6444037 ], [ -87.5867586, 41.6447868 ], [ -87.5900449, 41.6481154 ], [ -87.590505, 41.6483831 ], [ -87.5914485, 41.6488206 ], [ -87.592714, 41.6489854 ], [ -87.5940764, 41.6489412 ], [ -87.5978293, 41.6481496 ], [ -87.597829, 41.644619 ], [ -87.617228, 41.644585 ], [ -87.6172083, 41.6497287 ], [ -87.6176803, 41.6495567 ], [ -87.6206123, 41.6498957 ], [ -87.6188003, 41.6538017 ], [ -87.6176113, 41.6588137 ], [ -87.6205203, 41.6587497 ], [ -87.6201089, 41.6597268 ], [ -87.620165, 41.6601364 ], [ -87.6204571, 41.6605139 ], [ -87.6209082, 41.6609243 ], [ -87.621974, 41.661162 ], [ -87.62344, 41.661139 ], [ -87.6242125, 41.6609327 ], [ -87.6257603, 41.6602524 ], [ -87.6264147, 41.6598997 ], [ -87.6278112, 41.6589017 ], [ -87.6284031, 41.6583297 ], [ -87.6312159, 41.6569548 ], [ -87.6316188, 41.6565665 ], [ -87.6324869, 41.6563315 ], [ -87.6331758, 41.6563686 ], [ -87.6341116, 41.6562479 ], [ -87.6365338, 41.6563106 ], [ -87.6365348, 41.6569686 ], [ -87.6373818, 41.6564126 ], [ -87.6399588, 41.6566166 ], [ -87.6409388, 41.6570136 ], [ -87.6412988, 41.6568366 ], [ -87.6417808, 41.6568006 ], [ -87.6422301, 41.6568193 ], [ -87.6425593, 41.656749 ], [ -87.6429543, 41.6567334 ], [ -87.6434066, 41.6566246 ], [ -87.6435148, 41.6567634 ], [ -87.6477088, 41.6563046 ], [ -87.6480958, 41.6560606 ], [ -87.6490717, 41.6558236 ], [ -87.6491718, 41.6564206 ], [ -87.6471788, 41.6568936 ], [ -87.6471838, 41.6574886 ], [ -87.6469018, 41.6575106 ], [ -87.6471747, 41.663242 ], [ -87.6415205, 41.6632789 ], [ -87.6417966, 41.670498 ], [ -87.6610047, 41.6702839 ], [ -87.6613698, 41.6775288 ], [ -87.6666442, 41.6774428 ], [ -87.6672457, 41.6757816 ], [ -87.6683267, 41.6760056 ], [ -87.6677508, 41.6774619 ], [ -87.6686424, 41.6774198 ], [ -87.6808255, 41.6773025 ], [ -87.6863031, 41.6772126 ], [ -87.6858383, 41.6785409 ], [ -87.6856094, 41.6803541 ], [ -87.6858757, 41.6843386 ], [ -87.6956469, 41.6842122 ], [ -87.6957318, 41.6877697 ], [ -87.6993786, 41.6877956 ], [ -87.6993515, 41.6861721 ], [ -87.7005092, 41.686137 ], [ -87.7005511, 41.6843231 ], [ -87.705318, 41.6841994 ], [ -87.7053212, 41.6805821 ], [ -87.7113134, 41.6804711 ], [ -87.7114197, 41.6839646 ], [ -87.7393646, 41.6835016 ], [ -87.739718, 41.6908927 ], [ -87.720426, 41.691267 ], [ -87.7210366, 41.7130366 ], [ -87.7126166, 41.7131596 ], [ -87.7125556, 41.7112476 ], [ -87.7112137, 41.7112676 ], [ -87.7110417, 41.7059836 ], [ -87.7013964, 41.7061537 ], [ -87.7012977, 41.7069486 ], [ -87.6915995, 41.7071313 ], [ -87.6916141, 41.7135571 ], [ -87.6817627, 41.7135436 ], [ -87.6823844, 41.73552 ], [ -87.7408436, 41.7346088 ], [ -87.7419963, 41.7748474 ], [ -87.800743, 41.773778 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 68" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -88.2619321, 41.7246532 ], [ -88.2632812, 41.9922312 ], [ -87.9400064, 41.9934612 ], [ -87.9397202, 41.9582774 ], [ -87.9206228, 41.9548307 ], [ -87.9193401, 41.8475569 ], [ -87.9150867, 41.7179664 ], [ -87.9807472, 41.687784 ], [ -88.0301857, 41.6861174 ], [ -88.0308497, 41.7260094 ], [ -88.2423162, 41.7248853 ], [ -88.2492256, 41.7248852 ], [ -88.2544827, 41.7248052 ], [ -88.2579588, 41.7246931 ], [ -88.2619321, 41.7246532 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 75" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -87.7903263, 41.4698215 ], [ -87.7873351, 41.4698356 ], [ -87.7867137, 41.4262883 ], [ -87.7864687, 41.4046253 ], [ -87.7863309, 41.3937963 ], [ -87.7862633, 41.3883861 ], [ -87.7861917, 41.3829713 ], [ -87.7861528, 41.3806663 ], [ -87.7861387, 41.3795057 ], [ -87.7861273, 41.3783502 ], [ -87.7860752, 41.374452 ], [ -87.7860232, 41.3705277 ], [ -87.7859382, 41.3645277 ], [ -87.7858917, 41.3615222 ], [ -87.7858492, 41.3585312 ], [ -87.7853832, 41.3344712 ], [ -87.7849931, 41.3147824 ], [ -87.784977, 41.3138439 ], [ -87.7849556, 41.3125147 ], [ -87.7849128, 41.3100979 ], [ -87.784838, 41.3052441 ], [ -87.78467, 41.2958186 ], [ -88.0121517, 41.2927119 ], [ -88.010435, 41.1951321 ], [ -88.2438109, 41.1943506 ], [ -88.2408772, 41.1143267 ], [ -88.5862332, 41.1082131 ], [ -88.596028, 41.4603526 ], [ -88.2521894, 41.4631471 ], [ -88.2619321, 41.7246532 ], [ -88.0308401, 41.7259517 ], [ -88.0304186, 41.7010889 ], [ -88.0292104, 41.6700296 ], [ -88.0279174, 41.6487153 ], [ -87.9122025, 41.6511773 ], [ -87.9091137, 41.5567955 ], [ -87.8946672, 41.5570507 ], [ -87.8800972, 41.5571153 ], [ -87.851005, 41.5576646 ], [ -87.8218937, 41.5581303 ], [ -87.7927606, 41.5584803 ], [ -87.7923374, 41.5431653 ], [ -87.792232, 41.5423695 ], [ -87.7920586, 41.5418712 ], [ -87.7918316, 41.541401 ], [ -87.7911858, 41.5403813 ], [ -87.7909246, 41.5399116 ], [ -87.790658, 41.5393536 ], [ -87.7904512, 41.5385089 ], [ -87.7903408, 41.5044195 ], [ -87.7903263, 41.4698215 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 152" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -88.1996136, 42.154261 ], [ -88.1990908, 42.495423 ], [ -88.0012948, 42.4949439 ], [ -87.8002606, 42.4936907 ], [ -87.7953246, 42.4697907 ], [ -87.7974929, 42.4632922 ], [ -87.7987478, 42.4472525 ], [ -87.8026362, 42.4358151 ], [ -87.8013179, 42.3929631 ], [ -87.8024029, 42.3840832 ], [ -87.8113591, 42.3641537 ], [ -87.8249315, 42.350893 ], [ -87.8264565, 42.3372433 ], [ -87.830727, 42.3274003 ], [ -87.8286249, 42.3143138 ], [ -87.8247653, 42.3097188 ], [ -87.8326303, 42.3017059 ], [ -87.8313902, 42.2888693 ], [ -87.8268493, 42.2774192 ], [ -87.8277228, 42.2735698 ], [ -87.8250063, 42.2653659 ], [ -87.8206041, 42.257345 ], [ -87.8155778, 42.2458816 ], [ -87.8099912, 42.2313478 ], [ -87.8111766, 42.2294786 ], [ -87.8066841, 42.2242187 ], [ -87.7990342, 42.2074595 ], [ -87.7577543, 42.1521762 ], [ -88.1996136, 42.154261 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 1035" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -88.2923126, 42.4936184 ], [ -88.508079, 42.4947073 ], [ -88.5579012, 42.4950449 ], [ -88.6075517, 42.495108 ], [ -88.6576309, 42.4948966 ], [ -88.682327, 42.4942764 ], [ -88.8111087, 42.4922383 ], [ -88.8757457, 42.4937915 ], [ -88.9080733, 42.4944061 ], [ -88.9403641, 42.4950552 ], [ -88.9397234, 42.1523339 ], [ -88.8113489, 42.1535249 ], [ -88.7052223, 42.153491 ], [ -88.1996136, 42.154261 ], [ -88.1990908, 42.495423 ], [ -88.1998681, 42.4942043 ], [ -88.208582, 42.4958126 ], [ -88.2507926, 42.4959849 ], [ -88.271553, 42.4935377 ], [ -88.2923126, 42.4936184 ] ] ] ] } },
+    { "type": "Feature", "properties": { "name": "Local 582" }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ -88.2521906, 41.4631309 ], [ -88.596028, 41.4603526 ], [ -88.6022055, 42.0269134 ], [ -88.6023321, 42.0664567 ], [ -88.5882683, 42.0663851 ], [ -88.58873, 42.1536207 ], [ -88.5271894, 42.1540026 ], [ -88.2384502, 42.1542678 ], [ -88.2382922, 42.0669598 ], [ -88.2636462, 42.0668758 ], [ -88.2632823, 41.992215 ], [ -88.262776, 41.9389176 ], [ -88.2627723, 41.8967751 ], [ -88.2619379, 41.724756 ], [ -88.2521906, 41.4631309 ] ] ] ] } }
+  ]
+};
+
+// ══════════════════════════════════════════════════════════════════
+// POINT-IN-POLYGON  (ray-casting) - PRESERVED EXACTLY
+// ══════════════════════════════════════════════════════════════════
+function pointInPolygon(point, polygon) {
+  const [px, py] = point;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+    const intersect = ((yi > py) !== (yj > py)) &&
+      (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function assignTerritory(lat, lng) {
+  const point = [lng, lat];
+  for (const feature of TERRITORIES.features) {
+    const mp = feature.geometry.coordinates;
+    for (const polygon of mp) {
+      for (const ring of polygon) {
+        const ring2d = ring.map(c => [c[0], c[1]]);
+        if (pointInPolygon(point, ring2d)) return feature.properties.name;
+      }
+    }
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HUMAN-FRIENDLY MAPPINGS - PRESERVED EXACTLY
+// ══════════════════════════════════════════════════════════════════
+const STATUS_MAP = {
+  'PaymentRequired': 'Payment Required',
+  'Active': 'Active',
+  'Terminated': 'Terminated',
+  'Expired': 'Expired',
+  'Pending': 'Pending',
+  'Withdrawn': 'Withdrawn',
+  'Rejected': 'Rejected',
+  'Closed': 'Closed',
+  'Draft': 'Draft',
+  'UnderReview': 'Under Review',
+};
+
+const COVERAGE_STATUS_MAP = {
+  'Active': 'Active',
+  'Inactive': 'Inactive',
+  'Terminated': 'Terminated',
+  'Expired': 'Expired',
+};
+
+const COVERAGE_TYPE_MAP = {
+  'General_Permit': 'General Permit',
+  'Individual_Permit': 'Individual Permit',
+};
+
+const SUBMISSION_TYPE_MAP = {
+  'New': 'New',
+  'Renewal': 'Renewal',
+  'Amendment': 'Amendment',
+  'Termination': 'Termination',
+  'Transfer': 'Transfer',
+};
+
+const ATTACHMENT_CATEGORY_MAP = {
+  'ZIP': 'ZIP Archive',
+  'COR': 'Copy of Record',
+  'STORMWATER': 'Stormwater Plan',
+  'HISTORIC_PRESERVATION': 'Historic Preservation',
+  'ECOCAT_APPROVAL': 'EcoCAT Approval',
+  'OTHER': 'Other',
+};
+
+function humanStatus(val, map) {
+  if (!val) return null;
+  return map[val] || val;
+}
+
+function formatDate(str) {
+  if (!str) return null;
+  try {
+    const d = new Date(str);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch { return str; }
+}
+
+function formatDateShort(str) {
+  if (!str) return null;
+  try {
+    const d = new Date(str);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch { return str; }
+}
+
+function formatAcres(val) {
+  if (val === null || val === undefined) return null;
+  return Number(val).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' acres';
+}
+
+function formatFileSize(bytes) {
+  if (!bytes) return null;
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function mapsLink(lat, lng, label) {
+  return `[${label}](https://maps.google.com/?q=${lat},${lng})`;
+}
+
+function formatAddress(addr) {
+  if (!addr) return null;
+  const parts = [
+    addr.address1,
+    addr.address2,
+    addr.address3,
+    addr.address4,
+  ].filter(Boolean);
+  const cityLine = [addr.city, addr.stateCode, addr.zipCode].filter(Boolean).join(', ');
+  if (cityLine) parts.push(cityLine);
+  return parts.join(', ');
+}
+
+function formatContact(contact) {
+  if (!contact) return null;
+  const name = [contact.firstName, contact.middleInitial, contact.lastName].filter(Boolean).join(' ');
+  const lines = [];
+  if (name.trim()) lines.push(`**Name:** ${name.trim()}`);
+  if (contact.title) lines.push(`**Title:** ${contact.title}`);
+  if (contact.organization) lines.push(`**Organization:** ${contact.organization}`);
+  if (contact.phone) lines.push(`**Phone:** ${contact.phone}`);
+  if (contact.cell) lines.push(`**Cell:** ${contact.cell}`);
+  if (contact.fax) lines.push(`**Fax:** ${contact.fax}`);
+  if (contact.email) lines.push(`**Email:** ${contact.email}`);
+  return lines.length ? lines.join('  \n    ') : null;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FILTERING HELPERS (NEW FOR V2)
+// ══════════════════════════════════════════════════════════════════
+function parseDateInput(str) {
+  if (!str) return null;
+  // Normalize to UTC midnight for consistent comparison
+  const d = new Date(str + 'T00:00:00Z');
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function isTBDOperator(opStr) {
+  if (!opStr) return false;
+  const normalized = opStr.toString().toLowerCase().trim();
+  return /^\s*(t\.?\s*b\.?\s*d\.?|to\s+be\s+determined)\s*$/.test(normalized);
+}
+
+function filterPermits(permits, options) {
+  const { startDate, endDate, includeTBD } = options;
+  
+  return permits.filter(p => {
+    // Date range filter on siteProjectStart
+    if (startDate || endDate) {
+      const projectStart = p.projectSiteInformation?.siteProjectStart;
+      const pd = parseDateInput(projectStart);
+      if (!pd) return false; // Exclude if missing date when filter active
+      if (startDate && pd < startDate) return false;
+      if (endDate && pd > endDate) return false;
+    }
+    
+    // TBD operator filter
+    if (!includeTBD) {
+      const op = p.operatorInformation?.operatorName || '';
+      if (isTBDOperator(op)) return false;
+    }
+    
+    return true;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// REPORT GENERATION (MODIFIED TO ACCEPT includeDocs FLAG)
+// ══════════════════════════════════════════════════════════════════
+function generateReport(permits, options = {}) {
+  const { includeDocs = true } = options;
+  const now = new Date();
+  const generatedOn = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // Assign territories
+  const grouped = {};
+  let unassigned = [];
+
+  for (const p of permits) {
+    const lat = p.projectSiteInformation?.siteLocation?.latitude;
+    const lng = p.projectSiteInformation?.siteLocation?.longitude;
+    let territory = null;
+    if (lat != null && lng != null) territory = assignTerritory(lat, lng);
+    if (territory) {
+      if (!grouped[territory]) grouped[territory] = [];
+      grouped[territory].push(p);
+    } else {
+      unassigned.push(p);
+    }
+  }
+
+  // Sort locals numerically
+  const sortedLocals = Object.keys(grouped).sort((a, b) => {
+    const na = parseInt(a.replace(/\D/g, '')) || 0;
+    const nb = parseInt(b.replace(/\D/g, '')) || 0;
+    return na - nb;
+  });
+
+  // Sort projects within each local by siteAreaDisturbed desc
+  for (const local of sortedLocals) {
+    grouped[local].sort((a, b) =>
+      (b.projectSiteInformation?.siteAreaDisturbed || 0) - (a.projectSiteInformation?.siteAreaDisturbed || 0)
+    );
+  }
+  unassigned.sort((a, b) =>
+    (b.projectSiteInformation?.siteAreaDisturbed || 0) - (a.projectSiteInformation?.siteAreaDisturbed || 0)
+  );
+
+// Helper: convert "Local 1" → "local-1" for anchor IDs
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+// Build summary table
+const allLocals = [...sortedLocals];
+if (unassigned.length) allLocals.push('Unassigned');
+
+let summaryRows = '';
+let grandTotal = 0;
+let grandAcres = 0;
+for (const local of allLocals) {
+  const projects = local === 'Unassigned' ? unassigned : grouped[local];
+  const count = projects.length;
+  const acres = projects.reduce((s, p) => s + (p.projectSiteInformation?.siteAreaDisturbed || 0), 0);
+  grandTotal += count;
+  grandAcres += acres;
+  
+  // ✅ Add anchor link to territory name
+  const anchor = slugify(local);
+  summaryRows += `| [${local}](#${anchor}) | ${count} | ${acres.toLocaleString('en-US', {maximumFractionDigits:2})} |\n`;
+}
+summaryRows += `| **Total** | **${grandTotal}** | **${grandAcres.toLocaleString('en-US', {maximumFractionDigits:2})}** |\n`;
+
+let md = '';
+md += `# NPDES Construction General Permit — Territory Report\n\n`;
+md += `**Generated:** ${generatedOn}  \n`;
+md += `**Total Permits:** ${permits.length}  \n`;
+md += `**Territories Represented:** ${sortedLocals.length}${unassigned.length ? ' (plus unassigned)' : ''}\n\n`;
+md += `---\n\n`;
+md += `## Summary\n\n`;
+md += `| Territory | # of Permits | Total Acres Disturbed |\n`;
+md += `|-----------|-------------:|----------------------:|\n`;
+md += summaryRows;
+md += `\n---\n\n`;
+
+// Per-local sections — ✅ NO manual heading added here
+for (const local of sortedLocals) {
+  md += formatLocalSection(local, grouped[local], includeDocs);
+}
+if (unassigned.length) {
+  md += formatLocalSection('Unassigned', unassigned, includeDocs);
+}
+
+return md;
+}
+
+function formatLocalSection(localName, projects, includeDocs) {
+  const totalAcres = projects.reduce((s, p) => s + (p.projectSiteInformation?.siteAreaDisturbed || 0), 0);
+  let md = `## ${localName}\n\n`;
+  md += `_${projects.length} permit${projects.length !== 1 ? 's' : ''} · ${totalAcres.toLocaleString('en-US', {maximumFractionDigits:2})} total acres disturbed_\n\n`;
+
+  for (let i = 0; i < projects.length; i++) {
+    md += formatProject(projects[i], i + 1, includeDocs);
+    if (i < projects.length - 1) md += '\n---\n\n';
+  }
+  md += '\n---\n\n';
+  return md;
+}
+
+function formatProject(p, num, includeDocs = true) {
+  const site = p.projectSiteInformation || {};
+  const addr = site.siteAddress || {};
+  const loc = site.siteLocation || {};
+  const op = p.operatorInformation || {};
+  const poc = op.operatorPointOfContact || {};
+
+  let md = '';
+
+  // Header
+  const npdesId = p.npdesId || '—';
+  const siteName = site.siteName || '(Unnamed Site)';
+  md += `### ${num}. ${siteName}\n\n`;
+  md += `**NPDES ID:** \`${npdesId}\`\n\n`;
+
+  // Location
+  const fullAddr = formatAddress(addr);
+  if (fullAddr) md += `**Site Address:** ${fullAddr}\n\n`;
+  if (loc.latitude && loc.longitude) {
+    md += `**Map:** ${mapsLink(loc.latitude, loc.longitude, 'View on Google Maps')}\n\n`;
+  }
+
+  // Acreage & Dates
+  const acresVal = site.siteAreaDisturbed;
+  if (acresVal != null) md += `**Area to Be Disturbed:** ${formatAcres(acresVal)}\n\n`;
+
+  const startDate = formatDate(site.siteProjectStart);
+  const endDate = formatDate(site.siteProjectEnd);
+  if (startDate || endDate) {
+    md += `**Project Duration:** ${startDate || '—'} through ${endDate || '—'}\n\n`;
+  }
+
+  // Status
+  const status = humanStatus(p.status, STATUS_MAP);
+  const subStatus = p.submissionStatus;
+  const subType = humanStatus(p.submissionType, SUBMISSION_TYPE_MAP);
+  const covType = humanStatus(p.coverageType, COVERAGE_TYPE_MAP);
+  const covStatus = humanStatus(p.coverageStatus, COVERAGE_STATUS_MAP);
+
+  md += `**Permit Status:** ${status || '—'}  \n`;
+  if (subStatus) md += `**Submission Status:** ${subStatus}  \n`;
+  if (subType) md += `**Submission Type:** ${subType}  \n`;
+  if (covType) md += `**Permit Type:** ${covType}  \n`;
+  if (covStatus) md += `**Coverage Status:** ${covStatus}  \n`;
+  md += '\n';
+
+  // Key dates
+  const dates = [
+    ['Submitted', p.submittedDate],
+    ['Certified', p.certifiedDate],
+    ['Effective', p.effectiveDate],
+    ['Review Expires', p.reviewExpiration],
+    ['Permit Expires', p.expirationDate],
+  ].filter(([, v]) => v);
+
+  if (dates.length) {
+    for (const [label, val] of dates) {
+      md += `**${label}:** ${formatDateShort(val)}  \n`;
+    }
+    md += '\n';
+  }
+
+  // Operator
+  if (op.operatorName) {
+    md += `#### Operator\n\n`;
+    md += `**Organization:** ${op.operatorName}\n\n`;
+    const opAddr = formatAddress(op.operatorAddress);
+    if (opAddr) md += `**Address:** ${opAddr}\n\n`;
+
+    // Point of contact
+    const pocName = [poc.firstName, poc.middleInitial, poc.lastName].filter(Boolean).join(' ').trim();
+    if (pocName || poc.title || poc.phone || poc.email) {
+      md += `**Point of Contact:**  \n`;
+      if (pocName) md += `    **Name:** ${pocName}  \n`;
+      if (poc.title) md += `    **Title:** ${poc.title}  \n`;
+      if (poc.organization) md += `    **Organization:** ${poc.organization}  \n`;
+      if (poc.phone) md += `    **Phone:** ${poc.phone}  \n`;
+      if (poc.cell) md += `    **Cell:** ${poc.cell}  \n`;
+      if (poc.fax) md += `    **Fax:** ${poc.fax}  \n`;
+      if (poc.email) md += `    **Email:** ${poc.email}  \n`;
+      md += '\n';
+    }
+  }
+
+  // Attachments - CONDITIONAL BASED ON includeDocs FLAG
+  if (includeDocs && p.attachments && p.attachments.length) {
+    const filteredAtt = p.attachments.filter(a => a.name && a.category !== 'ZIP');
+    if (filteredAtt.length) {
+      md += `#### Attached Documents\n\n`;
+      for (const att of filteredAtt) {
+        const cat = humanStatus(att.category, ATTACHMENT_CATEGORY_MAP) || att.category;
+        const size = formatFileSize(att.size);
+        md += `- **${att.name}** — ${cat}${size ? ' (' + size + ')' : ''}  \n`;
+      }
+      md += '\n';
+    }
+  }
+
+  return md;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI (UPDATED TO WIRE NEW CONTROLS)
+// ══════════════════════════════════════════════════════════════════
+let loadedPermits = null;
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileNameBadge = document.getElementById('file-name-badge');
+const fileNameText = document.getElementById('file-name-text');
+const statusBar = document.getElementById('status-bar');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+const statsStrip = document.getElementById('stats-strip');
+const filterControls = document.getElementById('filter-controls');
+const generateSection = document.getElementById('generate-section');
+const outputSection = document.getElementById('output-section');
+const reportOutput = document.getElementById('report-output');
+const emptyHero = document.getElementById('empty-hero');
+const toast = document.getElementById('toast');
+
+// Filter control refs
+const includeDocsChk = document.getElementById('include-docs');
+const includeTBDChek = document.getElementById('include-tbd');
+const startDateInput = document.getElementById('start-date');
+const endDateInput = document.getElementById('end-date');
+const clearDatesBtn = document.getElementById('clear-dates');
+
+function showStatus(msg, type = 'info') {
+  statusBar.classList.add('visible');
+  statusText.textContent = msg;
+  statusDot.className = 'status-dot' + (type === 'success' ? ' success' : type === 'error' ? ' error' : '');
+}
+
+function updateStats(permits) {
+  const totalAcres = permits.reduce((s, p) => s + (p.projectSiteInformation?.siteAreaDisturbed || 0), 0);
+  const locals = new Set();
+  let unassignedCount = 0;
+  for (const p of permits) {
+    const lat = p.projectSiteInformation?.siteLocation?.latitude;
+    const lng = p.projectSiteInformation?.siteLocation?.longitude;
+    if (lat != null && lng != null) {
+      const t = assignTerritory(lat, lng);
+      if (t) locals.add(t); else unassignedCount++;
+    } else {
+      unassignedCount++;
+    }
+  }
+
+  document.getElementById('stat-total').textContent = permits.length;
+  document.getElementById('stat-locals').textContent = locals.size;
+  document.getElementById('stat-acres').textContent = totalAcres.toLocaleString('en-US', {maximumFractionDigits:1});
+  document.getElementById('stat-unassigned').textContent = unassignedCount;
+}
+
+function processFile(file) {
+  if (!file || !file.name.endsWith('.json')) {
+    showStatus('Please upload a valid .json file.', 'error');
+    return;
+  }
+
+  fileNameText.textContent = file.name;
+  fileNameBadge.style.display = 'inline-flex';
+  showStatus('Reading file…');
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('Expected a JSON array at the top level.');
+      loadedPermits = data;
+
+      // Show raw stats initially
+      updateStats(data);
+
+      statsStrip.style.display = 'grid';
+      filterControls.style.display = 'flex';
+      generateSection.style.display = 'flex';
+      emptyHero.style.display = 'none';
+      showStatus(`Loaded ${data.length} permits from "${file.name}". Adjust filters and click Generate Report.`, 'success');
+    } catch (err) {
+      showStatus('Error parsing JSON: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) processFile(e.target.files[0]);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+
+document.getElementById('generate-btn').addEventListener('click', () => {
+  if (!loadedPermits) return;
+  showStatus('Generating report…');
+  
+  setTimeout(() => {
+    try {
+      // Read filter options
+      const options = {
+        startDate: parseDateInput(startDateInput.value),
+        endDate: parseDateInput(endDateInput.value),
+        includeTBD: includeTBDChek.checked,
+        includeDocs: includeDocsChk.checked
+      };
+      
+      // Apply filters
+      const filtered = filterPermits(loadedPermits, options);
+      
+      // Update stats to reflect filtered results
+      updateStats(filtered);
+      
+      // Generate report with includeDocs flag
+      const md = generateReport(filtered, { includeDocs: options.includeDocs });
+      
+      reportOutput.value = md;
+      outputSection.classList.add('visible');
+      outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showStatus(`Report generated — ${filtered.length} of ${loadedPermits.length} permits.`, 'success');
+    } catch (err) {
+      showStatus('Error generating report: ' + err.message, 'error');
+      console.error(err);
+    }
+  }, 30);
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  loadedPermits = null;
+  fileInput.value = '';
+  fileNameBadge.style.display = 'none';
+  statsStrip.style.display = 'none';
+  filterControls.style.display = 'none';
+  generateSection.style.display = 'none';
+  outputSection.classList.remove('visible');
+  emptyHero.style.display = 'block';
+  statusBar.classList.remove('visible');
+  reportOutput.value = '';
+  startDateInput.value = '';
+  endDateInput.value = '';
+  includeDocsChk.checked = true;
+  includeTBDChek.checked = true;
+});
+
+clearDatesBtn.addEventListener('click', () => {
+  startDateInput.value = '';
+  endDateInput.value = '';
+});
+
+document.getElementById('copy-btn').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(reportOutput.value);
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  } catch {
+    reportOutput.select();
+    document.execCommand('copy');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+});
+
+document.getElementById('download-btn').addEventListener('click', () => {
+  const blob = new Blob([reportOutput.value], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `npdes-territory-report-${new Date().toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Dark mode
+const darkToggle = document.getElementById('dark-toggle');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+function applyDark(on) {
+  if (on) document.body.setAttribute('data-dark', '');
+  else document.body.removeAttribute('data-dark');
+}
+applyDark(prefersDark.matches);
+prefersDark.addEventListener('change', e => applyDark(e.matches));
+darkToggle.addEventListener('click', () => {
+  applyDark(!document.body.hasAttribute('data-dark'));
+});
+</script>
+</body>
+</html>
